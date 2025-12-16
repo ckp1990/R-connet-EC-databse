@@ -15,15 +15,49 @@ output:
 ### 1. Total Number of images of tigers and leopards
 The EC database has a total of 43781 images belonging to 3367 individual tigers and leopards obtained largely through camera trap surveys from 12 Wildlife Reserves and opportunistic collection from a larger network of forested areas neighboring these camera trap “sites”. The opportunistic collection included images of dead tigers, seized pelts, photographs contributed by naturalists and others. Camera trap images contribute to nearly 93% of 25,037 tiger images and 99% of 18,739 leopard images. These images belong to a total of 1984 individual tigers and 1654 individual leopards. Camera trap surveys contribute to nearly 73% and 92% of individual tigers and leopards respectively.
 
+```{r setup, include=FALSE}
+# Load configuration
+if(file.exists("config.R")) {
+  source("config.R")
+} else {
+  # Fallback defaults if config.R is missing in knitting environment
+  TIGER_DATA_FILE <- "Animal_cature_details.csv"
+  LEOPARD_DATA_FILE <- "leopard_capture_details.csv"
+}
+```
+
 ```{r loading the data in the file,warning=FALSE,echo=FALSE,comment=FALSE,message=FALSE}
-Tiger<-read.csv("Animal_cature_details.csv",header = T)
-Tiger$name<-rep("Tiger",nrow(Tiger))
-Tiger<-Tiger[!duplicated(Tiger),]
-leopard<-read.csv("leopard_capture_details.csv",header = T)
-leopard$name<-rep("leopard",nrow(leopard))
-leopard<-leopard[!duplicated(leopard),]
+if (file.exists(TIGER_DATA_FILE)) {
+  Tiger<-read.csv(TIGER_DATA_FILE, header = T)
+  Tiger$name<-rep("Tiger",nrow(Tiger))
+  Tiger<-Tiger[!duplicated(Tiger),]
+} else {
+  stop(paste("Tiger data file not found:", TIGER_DATA_FILE))
+}
+
+if (file.exists(LEOPARD_DATA_FILE)) {
+  leopard<-read.csv(LEOPARD_DATA_FILE, header = T)
+  leopard$name<-rep("leopard",nrow(leopard))
+  leopard<-leopard[!duplicated(leopard),]
+} else {
+  stop(paste("Leopard data file not found:", LEOPARD_DATA_FILE))
+}
+
 require(dplyr)
 require(ggplot2)
+
+# Ensure data has expected columns before binding
+required_columns <- c("id", "CPMD", "name", "side", "time_seen", "site")
+missing_cols_tiger <- setdiff(required_columns, names(Tiger))
+missing_cols_leopard <- setdiff(required_columns, names(leopard))
+
+if(length(missing_cols_tiger) > 0) {
+  warning(paste("Tiger data missing columns:", paste(missing_cols_tiger, collapse=", ")))
+}
+if(length(missing_cols_leopard) > 0) {
+  warning(paste("Leopard data missing columns:", paste(missing_cols_leopard, collapse=", ")))
+}
+
 animal_data<-bind_rows(Tiger,leopard)
 ```
 
